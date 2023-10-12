@@ -3,7 +3,7 @@ name: CI/CD Pipeline for AWS Lambda
 on:
   push:
     branches:
-      - master  # Or whichever branch you want to target
+      - master
 
 jobs:
   build-and-test:
@@ -34,13 +34,22 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # Adjust to your AWS region
+        aws-region: us-east-1
 
     - name: Publish a new version of Lambda Layer
       id: publish-layer-version
       run: |
         LAYER_VERSION=$(aws lambda publish-layer-version --layer-name justalayer --zip-file fileb://./python/dependencies_payload.zip --compatible-runtimes python3.11 | jq '.LayerVersionArn' -r)
         echo "LAYER_VERSION_ARN=$LAYER_VERSION" >> $GITHUB_ENV
+
+    # Assuming you have handler functions named 'lambda_function.lambda_handler' for both 
+    - name: Create Lambda function - Retrieve
+      run: |
+        aws lambda create-function --function-name retrieve_data_from_rds --runtime python3.11 --role YOUR_EXECUTION_ROLE_ARN --handler lambda_function.lambda_handler
+
+    - name: Create Lambda function - Read
+      run: |
+        aws lambda create-function --function-name read-from-s3 --runtime python3.11 --role YOUR_EXECUTION_ROLE_ARN --handler lambda_function.lambda_handler
 
     - name: Update Lambda function code with new Layer - Retrieve
       run: |
@@ -49,4 +58,3 @@ jobs:
     - name: Update Lambda function code with new Layer - Read
       run: |
         aws lambda update-function-configuration --function-name read-from-s3 --layers $LAYER_VERSION_ARN
-
