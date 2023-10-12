@@ -64,7 +64,7 @@ jobs:
 
     - name: Upload Lambda function code - Retrieve
       run: |
-        zip retrieve_payload.zip read_from_rds/lambda_function_retrieve.py
+        zip retrieve_payload.zip read_from_rds/lambda_function.py
         RETRIES=3
         while [ $RETRIES -gt 0 ]; do
           aws lambda update-function-code --function-name retrieve-rds-data --zip-file fileb://retrieve_payload.zip && break
