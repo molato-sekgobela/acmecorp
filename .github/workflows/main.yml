@@ -39,6 +39,9 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    - name: Upload CSV to S3
+      run: aws s3 cp example_data.txt s3://acmecorpfunctions/data/
+
     - name: Publish a new version of Lambda Layer
       id: publish-layer-version
       run: |
