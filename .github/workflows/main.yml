@@ -46,7 +46,16 @@ jobs:
       run: |
         aws lambda update-function-configuration --function-name retrieve-rds-data --layers $LAYER_VERSION_ARN
 
+    - name: Upload Lambda function code - Retrieve
+      run: |
+        zip retrieve_payload.zip lambda_function_retrieve.py
+        aws lambda update-function-code --function-name retrieve-rds-data --zip-file fileb://retrieve_payload.zip
+
     - name: Update Lambda function code with new Layer - Read
       run: |
         aws lambda update-function-configuration --function-name read-s3-to-rds --layers $LAYER_VERSION_ARN
 
+    - name: Upload Lambda function code - Read
+      run: |
+        zip read_payload.zip lambda_function_read.py
+        aws lambda update-function-code --function-name read-s3-to-rds --zip-file fileb://read_payload.zip
