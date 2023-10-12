@@ -1,8 +1,7 @@
-# tests/test_lambda_function_read.py
 
 import unittest
 from unittest.mock import patch, Mock
-import lambda_function_read as read
+from read_from_s3_to_rds import lambda_function as read
 from unittest import TestCase, mock
 from read_from_s3_to_rds import lambda_function
 import json
