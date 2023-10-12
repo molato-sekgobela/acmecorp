@@ -41,8 +41,8 @@ jobs:
 
     - name: Update Lambda function code - Read
       run: |
-        aws lambda update-function-code --function-name lambda_function_read --s3-bucket acmecorpfunctions --s3-key lambda_function_payload.zip
+        aws lambda update-function-code --function-name read-from-s3 --s3-bucket acmecorpfunctions --s3-key lambda_function_payload.zip
 
     - name: Update Lambda function code - Retrieve
       run: |
-        aws lambda update-function-code --function-name lambda_function_retrieve --s3-bucket acmecorpfunctions --s3-key lambda_function_payload.zip
+        aws lambda update-function-code --function-name retrieve_data_from_rds --s3-bucket acmecorpfunctions --s3-key lambda_function_payload.zip
