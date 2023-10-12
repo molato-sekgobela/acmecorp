@@ -63,13 +63,19 @@ def lambda_handler(event, context):
     
     formatted_data = [f"Device ID: {entry['device_id']}, Timestamp: {entry['timestamp']}, Temperature: {entry['temperature']}°C, Humidity: {entry['humidity']}%, HVAC Status: {entry['hvac_status']}" for entry in data]
 
-    formatted_temperature_stats = (
-        f"Temperature - Mean: {temperature_stats['mean']}°C, Median: {temperature_stats['median']}°C, Min: {temperature_stats['min']}°C, Max: {temperature_stats['max']}°C"
-    )
+    if temperature_stats:
+        formatted_temperature_stats = (
+            f"Temperature - Mean: {temperature_stats['mean']}°C, Median: {temperature_stats['median']}°C, Min: {temperature_stats['min']}°C, Max: {temperature_stats['max']}°C"
+        )
+    else:
+        formatted_temperature_stats = "Temperature data not available"
 
-    formatted_humidity_stats = (
-        f"Humidity - Mean: {humidity_stats['mean']}%, Median: {humidity_stats['median']}%, Min: {humidity_stats['min']}%, Max: {humidity_stats['max']}%"
-    )
+    if humidity_stats:
+        formatted_humidity_stats = (
+            f"Humidity - Mean: {humidity_stats['mean']}%, Median: {humidity_stats['median']}%, Min: {humidity_stats['min']}%, Max: {humidity_stats['max']}%"
+        )
+    else:
+        formatted_humidity_stats = "Humidity data not available"
     
     response = {
         'Data': formatted_data,
@@ -79,5 +85,5 @@ def lambda_handler(event, context):
     
     return {
         'statusCode': 200,
-        'body': json.dumps(response)
+        'body': json.dumps(response)  # Use the custom JSON encoder for datetime objects
     }
