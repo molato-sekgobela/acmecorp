@@ -44,18 +44,42 @@ jobs:
 
     - name: Update Lambda function code with new Layer - Retrieve
       run: |
-        aws lambda update-function-configuration --function-name retrieve-rds-data --layers $LAYER_VERSION_ARN
+        RETRIES=3
+        while [ $RETRIES -gt 0 ]; do
+          aws lambda update-function-configuration --function-name retrieve-rds-data --layers $LAYER_VERSION_ARN && break
+          RETRIES=$((RETRIES - 1))
+          echo "Failed to update Lambda function configuration for retrieve. Retries left: $RETRIES"
+          sleep 10
+        done
+
+    - name: Update Lambda function code with new Layer - Read
+      run: |
+        RETRIES=3
+        while [ $RETRIES -gt 0 ]; do
+          aws lambda update-function-configuration --function-name read-s3-to-rds --layers $LAYER_VERSION_ARN && break
+          RETRIES=$((RETRIES - 1))
+          echo "Failed to update Lambda function configuration for read. Retries left: $RETRIES"
+          sleep 10
+        done
 
     - name: Upload Lambda function code - Retrieve
       run: |
         zip retrieve_payload.zip lambda_function_retrieve.py
-        aws lambda update-function-code --function-name retrieve-rds-data --zip-file fileb://retrieve_payload.zip
-
-    - name: Update Lambda function code with new Layer - Read
-      run: |
-        aws lambda update-function-configuration --function-name read-s3-to-rds --layers $LAYER_VERSION_ARN
+        RETRIES=3
+        while [ $RETRIES -gt 0 ]; do
+          aws lambda update-function-code --function-name retrieve-rds-data --zip-file fileb://retrieve_payload.zip && break
+          RETRIES=$((RETRIES - 1))
+          echo "Failed to update Lambda function code for retrieve. Retries left: $RETRIES"
+          sleep 10
+        done
 
     - name: Upload Lambda function code - Read
       run: |
         zip read_payload.zip lambda_function_read.py
-        aws lambda update-function-code --function-name read-s3-to-rds --zip-file fileb://read_payload.zip
+        RETRIES=3
+        while [ $RETRIES -gt 0 ]; do
+          aws lambda update-function-code --function-name read-s3-to-rds --zip-file fileb://read_payload.zip && break
+          RETRIES=$((RETRIES - 1))
+          echo "Failed to update Lambda function code for read. Retries left: $RETRIES"
+          sleep 10
+        done
