@@ -1,0 +1,31 @@
+name: CI/CD Pipeline for AWS Lambda
+
+on:
+  push:
+    branches:
+      - main  # Or whichever branch you want to target
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Tests
+      run: |
+        python -m unittest tests/test_lambda_function_retrieve.py
+        python -m unittest tests/test_lambda_function_read.py
+
+  # Additional jobs like deploy-to-aws can be added if needed
