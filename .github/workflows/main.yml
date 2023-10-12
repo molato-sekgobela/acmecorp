@@ -64,7 +64,10 @@ jobs:
 
     - name: Upload Lambda function code - Retrieve
       run: |
-        zip retrieve_payload.zip read_from_rds/lambda_function.py
+        # Move into the folder, zip the code, then move back
+        cd read_from_rds
+        zip -r ../retrieve_payload.zip lambda_function.py
+        cd ..
         RETRIES=3
         while [ $RETRIES -gt 0 ]; do
           aws lambda update-function-code --function-name retrieve-rds-data --zip-file fileb://retrieve_payload.zip && break
@@ -75,7 +78,10 @@ jobs:
 
     - name: Upload Lambda function code - Read
       run: |
-        zip read_payload.zip read_from_s3_to_rds/lambda_function.py
+        # Move into the folder, zip the code, then move back
+        cd read_from_s3_to_rds
+        zip -r ../read_payload.zip lambda_function.py
+        cd ..
         RETRIES=3
         while [ $RETRIES -gt 0 ]; do
           aws lambda update-function-code --function-name read-s3-to-rds --zip-file fileb://read_payload.zip && break
