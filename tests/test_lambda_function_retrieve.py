@@ -2,7 +2,7 @@
 
 import unittest
 from unittest.mock import patch, Mock, MagicMock
-import lambda_function_retrieve as retrieve_func
+from read_from_rds import lambda_function as retrieve_func
 import json
 
 

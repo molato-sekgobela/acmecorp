@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch, Mock
 import lambda_function_read as read
 from unittest import TestCase, mock
-from lambda_function_read import lambda_handler
+from read_from_s3_to_rds import lambda_function
 import json
 import os
 
@@ -42,7 +42,7 @@ class TestLambdaFunctionRead(unittest.TestCase):
         }
         
         # Call the lambda_handler function
-        response = lambda_handler(event, {})
+        response = lambda_function.lambda_handler(event, {})
         
         # Validate the response
         self.assertEqual(response["statusCode"], 200)
@@ -53,7 +53,7 @@ class TestLambdaFunctionRead(unittest.TestCase):
     @patch("lambda_function_read.boto3.client")
     def test_lambda_handler_no_records(self, mock_s3):
         event = {}
-        response = read.lambda_handler(event, None)
+        response = read.lambda_function.lambda_handler(event, None)
 
         self.assertEqual(response["statusCode"], 400)
         self.assertEqual(response["body"], '"Event does not contain Records."')
