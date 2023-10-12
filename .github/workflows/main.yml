@@ -3,7 +3,7 @@ name: CI/CD Pipeline for AWS Lambda
 on:
   push:
     branches:
-      - master  # Or whichever branch you want to target
+      - master
 
 jobs:
   build-and-test:
@@ -21,25 +21,25 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        mkdir -p python
-        pip install -r requirements.txt -t ./python
+        mkdir -p build/python/lib/python3.11/site-packages
+        pip install -r requirements.txt -t build/python/lib/python3.11/site-packages
 
     - name: Package dependencies for Layer
       run: |
-        cd python
-        zip -r dependencies_payload.zip .
+        cd build
+        zip -r dependencies_payload.zip python
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # Adjust to your AWS region
+        aws-region: us-east-1
 
     - name: Publish a new version of Lambda Layer
       id: publish-layer-version
       run: |
-        LAYER_VERSION=$(aws lambda publish-layer-version --layer-name justalayer --zip-file fileb://./python/dependencies_payload.zip --compatible-runtimes python3.11 | jq '.LayerVersionArn' -r)
+        LAYER_VERSION=$(aws lambda publish-layer-version --layer-name justalayer --zip-file fileb://./build/dependencies_payload.zip --compatible-runtimes python3.11 | jq '.LayerVersionArn' -r)
         echo "LAYER_VERSION_ARN=$LAYER_VERSION" >> $GITHUB_ENV
 
     - name: Update Lambda function code with new Layer - Retrieve
