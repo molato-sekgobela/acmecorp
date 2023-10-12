@@ -45,11 +45,11 @@ jobs:
     # Assuming you have handler functions named 'lambda_function.lambda_handler' for both 
     - name: Create Lambda function - Retrieve
       run: |
-        aws lambda create-function --function-name retrieve_data_from_rds --runtime python3.11 --role YOUR_EXECUTION_ROLE_ARN --handler lambda_function.lambda_handler
+        aws lambda create-function --function-name retrieve_data_from_rds --runtime python3.11 --role arn:aws:iam::859158209175:role/lambda-role-for-acmecorp --handler lambda_function.lambda_handler
 
     - name: Create Lambda function - Read
       run: |
-        aws lambda create-function --function-name read-from-s3 --runtime python3.11 --role YOUR_EXECUTION_ROLE_ARN --handler lambda_function.lambda_handler
+        aws lambda create-function --function-name read-from-s3 --runtime python3.11 --role arn:aws:iam::859158209175:role/lambda-role-for-acmecorp --handler lambda_function.lambda_handler
 
     - name: Update Lambda function code with new Layer - Retrieve
       run: |
