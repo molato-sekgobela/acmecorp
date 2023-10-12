@@ -44,7 +44,7 @@ jobs:
 
     - name: Update Lambda function code with new Layer - Retrieve
       run: |
-        aws lambda update-function-configuration --function-name lambda_function_retrieve --layers $LAYER_VERSION_ARN
+        aws lambda update-function-configuration --function-name retrieve-rds-data --layers $LAYER_VERSION_ARN
 
     - name: Update Lambda function code with new Layer - Read
       run: |
