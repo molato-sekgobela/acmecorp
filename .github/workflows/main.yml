@@ -21,28 +21,32 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt -t ./package
+        mkdir -p python
+        pip install -r requirements.txt -t ./python
 
-    - name: Zip the package
+    - name: Package dependencies for Layer
       run: |
-        cd package
-        zip -r function_payload.zip .
+        cd python
+        zip -r dependencies_payload.zip .
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # Adjust to your AWS region
+        aws-region: us-west-1  # Adjust to your AWS region
 
-    - name: Upload ZIP to S3
+    - name: Publish a new version of Lambda Layer
+      id: publish-layer-version
       run: |
-        aws s3 cp ./package/function_payload.zip s3://acmecorpfunctions/lambda_function_payload.zip
+        LAYER_VERSION=$(aws lambda publish-layer-version --layer-name justalayer --zip-file fileb://./python/dependencies_payload.zip --compatible-runtimes python3.11 | jq '.LayerVersionArn' -r)
+        echo "LAYER_VERSION_ARN=$LAYER_VERSION" >> $GITHUB_ENV
 
-    - name: Update Lambda function code - Read
+    - name: Update Lambda function code with new Layer - Retrieve
       run: |
-        aws lambda update-function-code --function-name read-from-s3 --s3-bucket acmecorpfunctions --s3-key lambda_function_payload.zip
+        aws lambda update-function-configuration --function-name retrieve_data_from_rds --layers $LAYER_VERSION_ARN
 
-    - name: Update Lambda function code - Retrieve
+    - name: Update Lambda function code with new Layer - Read
       run: |
-        aws lambda update-function-code --function-name retrieve_data_from_rds --s3-bucket acmecorpfunctions --s3-key lambda_function_payload.zip
+        aws lambda update-function-configuration --function-name read-from-s3 --layers $LAYER_VERSION_ARN
+
