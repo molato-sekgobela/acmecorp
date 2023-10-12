@@ -3,7 +3,7 @@ name: CI/CD Pipeline for AWS Lambda
 on:
   push:
     branches:
-      - main  # Or whichever branch you want to target
+      - master  # Or whichever branch you want to target
 
 jobs:
   build-and-test:
