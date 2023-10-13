@@ -4,10 +4,20 @@ import csv
 import mysql.connector
 import os
 
+# Create an S3 client
 s3_client = boto3.client('s3')
 
 
 def clean_data(row):
+    """
+    Cleans and validates a single row of data.
+
+    Parameters:
+    - row (dict): The row to be cleaned and validated.
+
+    Returns:
+    - tuple: Cleaned values for device_id, timestamp, temperature, humidity, hvac_status.
+    """
     # Clean and validate device_id
     device_id = str(row['device_id']).strip()
 
@@ -20,7 +30,7 @@ def clean_data(row):
     # Clean and validate temperature
     try:
         temperature = float(row['temperature'])
-        if not (0 <= temperature <= 50):  # example range, adjust as needed
+        if not (0 <= temperature <= 50):
             temperature = None
     except ValueError:
         temperature = None
@@ -28,7 +38,7 @@ def clean_data(row):
     # Clean and validate humidity
     try:
         humidity = float(row['humidity'])
-        if not (0 <= humidity <= 100):  # range: 0-100%
+        if not (0 <= humidity <= 100):
             humidity = None
     except ValueError:
         humidity = None
@@ -42,8 +52,18 @@ def clean_data(row):
 
 
 def lambda_handler(event, context):
+    """
+    AWS Lambda function handler to process the given event.
+
+    Parameters:
+    - event (dict): The AWS Lambda event to be processed.
+    - context (object): AWS Lambda context object.
+
+    Returns:
+    - dict: Dictionary with statusCode and body for the response.
+    """
     try:
-        print("Received event:", json.dumps(event))
+        print(f"Received event: {json.dumps(event)}")
 
         records = event.get('Records')
         if not records:
@@ -78,6 +98,7 @@ def lambda_handler(event, context):
             else:
                 print(f"Skipped invalid data: {row}")
 
+        # Connect to the database
         connection = mysql.connector.connect(
             host=os.environ['host'],
             database=os.environ['database'],
@@ -87,9 +108,11 @@ def lambda_handler(event, context):
 
         try:
             cursor = connection.cursor()
-            insert_query = ("INSERT INTO iot_device_data "
-                            "(device_id, timestamp, temperature, humidity, hvac_status) "
-                            "VALUES (%s, %s, %s, %s, %s)")
+            insert_query = (
+                "INSERT INTO iot_device_data "
+                "(device_id, timestamp, temperature, humidity, hvac_status) "
+                "VALUES (%s, %s, %s, %s, %s)"
+            )
             cursor.executemany(insert_query, results)
             connection.commit()
             print(f"Processed {cursor.rowcount} rows from the text file!")
@@ -103,14 +126,14 @@ def lambda_handler(event, context):
         }
 
     except mysql.connector.Error as err:
-        print("Database error:", err)
+        print(f"Database error: {err}")
         return {
             'statusCode': 500,
             'body': json.dumps(f"Database error: {err}")
         }
 
     except Exception as e:
-        print("General error:", e)
+        print(f"General error: {e}")
         return {
             'statusCode': 500,
             'body': json.dumps(f"An error occurred: {e}")
