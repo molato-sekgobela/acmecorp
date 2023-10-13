@@ -13,33 +13,33 @@ This README will guide you through the process of setting up an Amazon RDS insta
 ## 1. Configuring RDS (Relational Database Service)
 
 ### Database Creation
-- Login to AWS Console
-- First create RDS instance
-- Navigate to RDS in the AWS Console.
-- Choose the desired database (MySQL) and configure the instance details.
-- Set up a master username and password. Securely store these credentials.
-- Make the database publicly available (or you wont be able to access it via MySQL client later)
+        - Login to AWS Console
+        - First create RDS instance
+        - Navigate to RDS in the AWS Console.
+        - Choose the desired database (MySQL) and configure the instance details.
+        - Set up a master username and password. Securely store these credentials.
+        - Make the database publicly available (or you wont be able to access it via MySQL client later)
 
 ### Database Configuration
 
-- Modify the default VPC security group to allow all inbound traffic on the database port(3306).
-- Note down the RDS endpoint. It'll be used later.
+        - Modify the default VPC security group to allow all inbound traffic on the database port(3306).
+        - Note down the RDS endpoint. It'll be used later.
 
 ### Database Tables Setup
 
-- Connect to the database using MySQL Workbench.
-- Create the necessary database and tables for storing data (refer to "useful sql commands.txt" file).
+        - Connect to the database using MySQL Workbench.
+        - Create the necessary database and tables for storing data (refer to "useful sql commands.txt" file).
 
 ## 2. Setting Up IAM (Identity and Access Management)
 
-    ### Role Creation
+        ### Role Creation
 
-    - Navigate to the IAM dashboard.
-    - Create a new role for AWS services and select Lambda.
+        - Navigate to the IAM dashboard.
+        - Create a new role for AWS services and select Lambda.
 
-    ### Attaching Policies
+        ### Attaching Policies
 
-    - Attach policies granting RDS, S3 and CloudWatch full access.
+        - Attach policies granting RDS, S3 and CloudWatch full access.
 
 ## 3. Creating an S3 Bucket
 
