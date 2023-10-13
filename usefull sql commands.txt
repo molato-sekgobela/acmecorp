@@ -1,0 +1,12 @@
+#create the table
+
+CREATE TABLE iot_device_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    device_id VARCHAR(50) NOT NULL,
+    timestamp DATETIME NOT NULL,
+    temperature FLOAT NOT NULL,
+    humidity FLOAT NOT NULL,
+    hvac_status ENUM('on', 'off') NOT NULL
+);
+
+

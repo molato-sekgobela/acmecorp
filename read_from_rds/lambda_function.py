@@ -1,89 +1,117 @@
 import json
+import boto3
+import csv
 import mysql.connector
 import os
-import statistics
-import datetime
 
-# Define the custom JSON encoder for datetime objects
-class DateTimeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime.datetime):
-            return obj.strftime('%Y-%m-%d %H:%M:%S')
-        return super(DateTimeEncoder, self).default(obj)
+s3_client = boto3.client('s3')
 
-def retrieve_data(device_id, start_date, end_date):
-    # Create a connection to the MySQL database
-    connection = mysql.connector.connect(
-        host=os.environ['host'],
-        database=os.environ['database'],
-        user=os.environ['user'],
-        password=os.environ['password']
-    )
-    cursor = connection.cursor(dictionary=True)
-    
-    # Query to fetch data for the given device_id and date_range
-    query = ("SELECT * FROM iot_device_data "
-             "WHERE device_id = %s AND timestamp BETWEEN %s AND %s")
-    cursor.execute(query, (device_id, start_date, end_date))
-    
-    results = cursor.fetchall()
-    
-    cursor.close()
-    connection.close()
-    
-    return results
 
-def compute_statistics(data, column_name):
-    values = [row[column_name] for row in data if row[column_name] is not None]
-    if not values:
-        return None
-    
-    return {
-        "mean": statistics.mean(values),
-        "median": statistics.median(values),
-        "min": min(values),
-        "max": max(values)
-    }
+def clean_data(row):
+    # Clean and validate device_id
+    device_id = str(row['device_id']).strip()
+
+    # Clean and validate timestamp
+    try:
+        timestamp = str(row['timestamp']).strip()
+    except ValueError:
+        timestamp = None
+
+    # Clean and validate temperature
+    try:
+        temperature = float(row['temperature'])
+        if not (0 <= temperature <= 50):  # example range, adjust as needed
+            temperature = None
+    except ValueError:
+        temperature = None
+
+    # Clean and validate humidity
+    try:
+        humidity = float(row['humidity'])
+        if not (0 <= humidity <= 100):  # range: 0-100%
+            humidity = None
+    except ValueError:
+        humidity = None
+
+    # Clean and validate hvac_status
+    hvac_status = str(row['hvac_status']).lower().strip()
+    if hvac_status not in ['on', 'off']:
+        hvac_status = None
+
+    return device_id, timestamp, temperature, humidity, hvac_status
+
 
 def lambda_handler(event, context):
-    device_id = event.get('device_id')
-    date_range = event.get('date_range')
-    
-    if not device_id or not date_range:
+    try:
+        print("Received event:", json.dumps(event))
+
+        records = event.get('Records')
+        if not records:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Event does not contain Records.')
+            }
+
+        bucket = records[0].get('s3', {}).get('bucket', {}).get('name')
+        txt_file = records[0].get('s3', {}).get('object', {}).get('key')
+
+        if not bucket or not txt_file:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Could not retrieve bucket or file key from event.')
+            }
+
+        txt_file_object = s3_client.get_object(Bucket=bucket, Key=txt_file)
+        lines = txt_file_object['Body'].read().decode('utf-8').splitlines()
+
+        if not lines:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('No data in the file.')
+            }
+
+        results = []
+        for row in csv.DictReader(lines):
+            cleaned_data = clean_data(row)
+            if None not in cleaned_data:
+                results.append(cleaned_data)
+            else:
+                print(f"Skipped invalid data: {row}")
+
+        connection = mysql.connector.connect(
+            host=os.environ['host'],
+            database=os.environ['database'],
+            user=os.environ['user'],
+            password=os.environ['password']
+        )
+
+        try:
+            cursor = connection.cursor()
+            insert_query = ("INSERT INTO iot_device_data "
+                            "(device_id, timestamp, temperature, humidity, hvac_status) "
+                            "VALUES (%s, %s, %s, %s, %s)")
+            cursor.executemany(insert_query, results)
+            connection.commit()
+            print(f"Processed {cursor.rowcount} rows from the text file!")
+        finally:
+            cursor.close()
+            connection.close()
+
         return {
-            'statusCode': 400,
-            'body': json.dumps('device_id and date_range are required.')
+            'statusCode': 200,
+            'body': json.dumps('success!')
         }
 
-    data = retrieve_data(device_id, date_range['start'], date_range['end'])
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f"Database error: {err}")
+        }
 
-    # Compute basic statistics
-    temperature_stats = compute_statistics(data, 'temperature')
-    humidity_stats = compute_statistics(data, 'humidity')
-    
-    formatted_data = [f"Device ID: {entry['device_id']}, Timestamp: {entry['timestamp']}, Temperature: {entry['temperature']}°C, Humidity: {entry['humidity']}%, HVAC Status: {entry['hvac_status']}" for entry in data]
-
-    if temperature_stats:
-        formatted_temperature_stats = (
-            f"Temperature - Mean: {temperature_stats['mean']}°C, Median: {temperature_stats['median']}°C, Min: {temperature_stats['min']}°C, Max: {temperature_stats['max']}°C"
-        )
-    else:
-        formatted_temperature_stats = "Temperature data not available"
-
-    if humidity_stats:
-        formatted_humidity_stats = (
-            f"Humidity - Mean: {humidity_stats['mean']}%, Median: {humidity_stats['median']}%, Min: {humidity_stats['min']}%, Max: {humidity_stats['max']}%"
-        )
-    else:
-        formatted_humidity_stats = "Humidity data not available"
-    
-    response = {
-        'Data': formatted_data,
-        'Temperature Statistics': formatted_temperature_stats,
-        'Humidity Statistics': formatted_humidity_stats
-    }
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps(response)  # Use the custom JSON encoder for datetime objects
-    }
+    except Exception as e:
+        print("General error:", e)
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f"An error occurred: {e}")
+        }
