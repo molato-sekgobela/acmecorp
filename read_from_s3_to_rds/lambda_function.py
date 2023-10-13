@@ -6,6 +6,7 @@ import os
 
 s3_client = boto3.client('s3')
 
+
 def clean_data(row):
     # Clean and validate device_id
     device_id = str(row['device_id']).strip()
@@ -18,7 +19,7 @@ def clean_data(row):
 
     # Clean and validate temperature
     try:
-        temperature = round(float(row['temperature'])) # Round to 0 decimal places
+        temperature = float(row['temperature'])
         if not (0 <= temperature <= 50):  # example range, adjust as needed
             temperature = None
     except ValueError:
@@ -26,7 +27,7 @@ def clean_data(row):
 
     # Clean and validate humidity
     try:
-        humidity = round(float(row['humidity'])) # Round to 0 decimal places
+        humidity = float(row['humidity'])
         if not (0 <= humidity <= 100):  # range: 0-100%
             humidity = None
     except ValueError:
@@ -38,6 +39,7 @@ def clean_data(row):
         hvac_status = None
 
     return device_id, timestamp, temperature, humidity, hvac_status
+
 
 def lambda_handler(event, context):
     try:
