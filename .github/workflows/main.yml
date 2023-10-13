@@ -1,5 +1,7 @@
+# CI/CD pipeline for deploying AWS Lambda functions and related tasks.
 name: CI/CD Pipeline for AWS Lambda
 
+# Triggers the workflow on a push to the master branch.
 on:
   push:
     branches:
@@ -7,31 +9,38 @@ on:
 
 jobs:
   build-and-test:
+    # Run this job on the latest version of Ubuntu.
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the code from the current repo.
     - name: Check out code
       uses: actions/checkout@v2
 
+    # Step 2: Setup the required Python version.
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
+    # Step 3: Run unittest to validate the file structure.
     - name: Run file structure unittest
       run: python -m unittest tests/test_file_structure.py
 
+    # Step 4: Install required Python packages for the AWS Lambda function.
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         mkdir -p build/python/lib/python3.11/site-packages
         pip install -r requirements.txt -t build/python/lib/python3.11/site-packages
 
+    # Step 5: Create a ZIP package of dependencies for the AWS Lambda layer.
     - name: Package dependencies for Layer
       run: |
         cd build
         zip -r dependencies_payload.zip python
 
+    # Step 6: Configure AWS credentials for subsequent steps.
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -39,15 +48,18 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    # Step 7: Upload a sample CSV file to S3.
     - name: Upload CSV to S3
       run: aws s3 cp example_data.txt s3://acmecorpfunctions/data/
 
+    # Step 8: Publish a new version of the Lambda Layer.
     - name: Publish a new version of Lambda Layer
       id: publish-layer-version
       run: |
         LAYER_VERSION=$(aws lambda publish-layer-version --layer-name justalayer --zip-file fileb://./build/dependencies_payload.zip --compatible-runtimes python3.11 | jq '.LayerVersionArn' -r)
         echo "LAYER_VERSION_ARN=$LAYER_VERSION" >> $GITHUB_ENV
 
+    # Step 9: Update the Retrieve function to use the new Lambda Layer.
     - name: Update Lambda function code with new Layer - Retrieve
       run: |
         RETRIES=3
@@ -58,6 +70,7 @@ jobs:
           sleep 10
         done
 
+    # Step 10: Update the Read function to use the new Lambda Layer.
     - name: Update Lambda function code with new Layer - Read
       run: |
         RETRIES=3
@@ -68,6 +81,7 @@ jobs:
           sleep 10
         done
 
+    # Step 11: Package and upload the Retrieve function's code.
     - name: Upload Lambda function code - Retrieve
       run: |
         cd read_from_rds
@@ -81,6 +95,7 @@ jobs:
           sleep 10
         done
 
+    # Step 12: Package and upload the Read function's code.
     - name: Upload Lambda function code - Read
       run: |
         cd read_from_s3_to_rds
@@ -91,5 +106,4 @@ jobs:
           aws lambda update-function-code --function-name read-s3-to-rds --zip-file fileb://read_payload.zip && break
           RETRIES=$((RETRIES - 1))
           echo "Failed to update Lambda function code for read. Retries left: $RETRIES"
-          sleep 10
-        done
+         

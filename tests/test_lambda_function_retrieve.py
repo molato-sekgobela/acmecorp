@@ -1,5 +1,3 @@
-# tests/test_lambda_function_retrieve.py
-
 import unittest
 from unittest.mock import patch, Mock, MagicMock
 from read_from_rds import lambda_function as retrieve_func
@@ -7,6 +5,9 @@ import json
 
 
 class TestLambdaFunctionRetrieve(unittest.TestCase):
+    """
+    Test cases for the lambda function that retrieves data from an RDS instance.
+    """
 
     @patch("mysql.connector.connect")
     @patch.dict("os.environ", {
@@ -16,6 +17,10 @@ class TestLambdaFunctionRetrieve(unittest.TestCase):
         "password": "test_password"
     })
     def test_lambda_handler_success(self, mock_connect):
+        """
+        Test if the lambda function correctly retrieves data from the RDS 
+        and processes it successfully.
+        """
         # Mocking MySQL connection and cursor
         mock_cursor = Mock()
         mock_cursor.fetchall.return_value = [
@@ -29,7 +34,7 @@ class TestLambdaFunctionRetrieve(unittest.TestCase):
         ]
         mock_connect.return_value = MagicMock(cursor=Mock(return_value=mock_cursor))
 
-        # Test event
+        # Sample test event for the lambda function
         event = {
             "device_id": "device_001",
             "date_range": {
@@ -38,14 +43,17 @@ class TestLambdaFunctionRetrieve(unittest.TestCase):
             }
         }
 
+        # Execute lambda handler with the test event
         response = retrieve_func.lambda_handler(event, None)
+
+        # Asserts to verify correct behavior
         self.assertEqual(response["statusCode"], 200)
         self.assertIn("Data", json.loads(response["body"]))
         self.assertIn("Temperature Statistics", json.loads(response["body"]))
         self.assertIn("Humidity Statistics", json.loads(response["body"]))
-        mock_cursor.execute.assert_called()
 
-    # Again, you can add more tests for various scenarios.
+        # Verify if SQL query execution was called on the mock cursor
+        mock_cursor.execute.assert_called()
 
 
 if __name__ == "__main__":
