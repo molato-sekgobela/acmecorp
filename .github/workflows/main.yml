@@ -106,4 +106,4 @@ jobs:
           aws lambda update-function-code --function-name read-s3-to-rds --zip-file fileb://read_payload.zip && break
           RETRIES=$((RETRIES - 1))
           echo "Failed to update Lambda function code for read. Retries left: $RETRIES"
-         
+        done
