@@ -1,4 +1,4 @@
-device_id,timestamp,temperaturehumidityhvac_status
+device_id,timestamp,temperature,humidity,hvac_status
 device_001,2023-07-26 00:00:00,22.5,55.0,on
 device_001,2023-07-26 01:00:00,22.6,54.5,on
 device_001,2023-07-26 02:00:00,22.8,53.0,on
