@@ -48,6 +48,9 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    # Step 7: Upload a sample CSV file to S3.
+    - name: Upload CSV to S3
+      run: aws s3 cp example_data.txt s3://acmecorpfunctions/data/
 
     # Step 8: Publish a new version of the Lambda Layer.
     - name: Publish a new version of Lambda Layer
@@ -104,7 +107,3 @@ jobs:
           RETRIES=$((RETRIES - 1))
           echo "Failed to update Lambda function code for read. Retries left: $RETRIES"
         done
-
-    # Step 7: Upload a sample CSV file to S3.
-    - name: Upload CSV to S3
-      run: aws s3 cp example_data.txt s3://acmecorpfunctions/data/
