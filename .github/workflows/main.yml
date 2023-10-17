@@ -64,7 +64,7 @@ jobs:
       run: |
         RETRIES=3
         while [ $RETRIES -gt 0 ]; do
-          aws lambda update-function-configuration --function-name retrieve-rds-data --layers $LAYER_VERSION_ARN && break
+          aws lambda update-function-configuration --function-name read_from_rds --layers $LAYER_VERSION_ARN && break
           RETRIES=$((RETRIES - 1))
           echo "Failed to update Lambda function configuration for retrieve. Retries left: $RETRIES"
           sleep 10
@@ -75,7 +75,7 @@ jobs:
       run: |
         RETRIES=3
         while [ $RETRIES -gt 0 ]; do
-          aws lambda update-function-configuration --function-name read-s3-to-rds --layers $LAYER_VERSION_ARN && break
+          aws lambda update-function-configuration --function-name read_from_s3_to_rds --layers $LAYER_VERSION_ARN && break
           RETRIES=$((RETRIES - 1))
           echo "Failed to update Lambda function configuration for read. Retries left: $RETRIES"
           sleep 10
