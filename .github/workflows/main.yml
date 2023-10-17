@@ -103,7 +103,7 @@ jobs:
         cd ..
         RETRIES=3
         while [ $RETRIES -gt 0 ]; do
-          aws lambda update-function-code --function-name read_s3_to_rds --zip-file fileb://read_payload.zip && break
+          aws lambda update-function-code --function-name read_from_s3_to_rds --zip-file fileb://read_payload.zip && break
           RETRIES=$((RETRIES - 1))
           echo "Failed to update Lambda function code for read. Retries left: $RETRIES"
         done
