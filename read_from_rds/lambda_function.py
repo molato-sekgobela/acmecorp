@@ -38,7 +38,7 @@ def retrieve_data(device_id, start_date, end_date):
     cursor = connection.cursor(dictionary=True)
 
     # Execute query
-    query = ("SELECT device_id,temperature,humidity FROM iot_device_data "
+    query = ("SELECT device_id,timestamp,temperature,humidity FROM iot_device_data "
              "WHERE device_id = %s AND timestamp BETWEEN %s AND %s")
     cursor.execute(query, (device_id, start_date, end_date))
 
